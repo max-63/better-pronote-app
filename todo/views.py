@@ -16,32 +16,7 @@ from PIL import Image
 import icalendar
 import requests
 
-def importer_edt(client):
-    url_ical = client.export_ical()
-    response = requests.get(url_ical)
-    cal = icalendar.Calendar.from_ical(response.content)
 
-    for component in cal.walk():
-        if component.name == "VEVENT":
-            start = component.get('DTSTART').dt
-            end = component.get('DTEND').dt
-            summary = str(component.get('SUMMARY'))
-            location = str(component.get('LOCATION') or "")
-            description = str(component.get('DESCRIPTION') or "")
-
-            # Facultatif : déduire semaine A ou B selon la date
-            semaine = 'A' if (start.isocalendar().week % 2 == 0) else 'B'
-
-            # Enregistre dans la BDD Django
-            EmploiDuTemps.objects.create(
-                date=start.date(),
-                start=start,
-                end=end,
-                matiere=summary,
-                salle=location,
-                description=description,
-                semaine_type=semaine
-            )
 
 def index(request):
     return render(request, 'index.html')
@@ -76,53 +51,58 @@ def login(request):
 def dashboard(request):
     user = request.user
     custom_user = CustomUser.objects.get(user=request.user)
+    connexion = ConnexionPronote.objects.get(utilisateur=user)
+    now = timezone.now()
+    temps_ecoule = now - connexion.date_connexion
+    # Si le temps écoulé est strictement entre 5 et 10 minutes
+    if datetime.timedelta(minutes=5) < temps_ecoule < datetime.timedelta(minutes=10):
+        if connexion.date_connexion + datetime.timedelta(minutes=5) <= timezone.now() and connexion.date_connexion < timezone.now() - datetime.timedelta(minutes=10):
+            client = pronotepy.Client.qrcode_login(
+                qr_code={
+                    "login": connexion.login,
+                    "jeton": connexion.jeton,
+                    "url": connexion.url,
+                    "uuid": custom_user.uuid,
+                    "pin": connexion.pin,
+                },
+                pin=connexion.pin,
+                uuid=connexion.uuid
+            )
+            
+            new_qr = client.request_qr_code_data(pin=str(connexion.pin))
+            # enregistrer les nouveaux truc dans la db
+            ConnexionPronote.objects.filter(utilisateur=request.user).update(
+                login=new_qr["login"],
+                jeton=new_qr["jeton"],
+                url=new_qr["url"],
+                date_connexion=timezone.now(),
+            )
+            devoirs = client.homework(datetime.date.today(), datetime.date.today() + datetime.timedelta(days=21))
+            print(f"{len(devoirs)} devoirs récupérés depuis Pronote")
+            for dev in devoirs:
+                #si dev.description n'existe pas dans la db + dev.date n'existe pas dans la db
+                if not Devoir.objects.filter(utilisateur=user, consigne=dev.description).exists() and not Devoir.objects.filter(utilisateur=user, date_limite=dev.date).exists():
+                    Devoir.objects.create(
+                        utilisateur=user,
+                        titre=dev.subject.name, 
+                        consigne=dev.description,
+                        date_limite=dev.date,
+                        est_termine=False
+                    )
+                elif Devoir.objects.filter(utilisateur=user, consigne=dev.description).exists():
+                    Devoir.objects.filter(utilisateur=user, consigne=dev.description).update(
+                        utilisateur=user,
+                        titre=dev.subject.name,
+                        consigne=dev.description,
+                        date_limite=dev.date,
+                        est_termine=False
+                    )
     
-    try:
-        connection = user.connexionpronote
-        mon_uuid = custom_user.uuid
         
-        now = timezone.now()  # datetime aware
-        limite = now - datetime.timedelta(minutes=10)
+            return render(request, 'dashboard.html')
+    
+    return render(request, 'dashboard.html')    
 
-        if connection.date_connexion < limite:
-            return render(request, 'dashboard.html', {"message": "non"})
-
-        client = pronotepy.Client.qrcode_login(
-            qr_code={
-                "login": connection.login,
-                "jeton": connection.jeton,
-                "url": connection.url,
-                "uuid": mon_uuid,
-                "pin": connection.pin,
-            },
-            pin=connection.pin,
-            uuid=connection.uuid
-        )
-
-        devoirs = client.homework(datetime.date.today(), datetime.date.today() + datetime.timedelta(days=21))
-        print(f"{len(devoirs)} devoirs récupérés depuis Pronote")
-        for dev in devoirs:
-            #si dev.description n'existe pas dans la db
-            if not Devoir.objects.filter(utilisateur=user, consigne=dev.description).exists():
-                Devoir.objects.create(
-                    utilisateur=user,
-                    titre=dev.subject.name, 
-                    consigne=dev.description,
-                    date_limite=dev.date,
-                    est_termine=False
-                )
-            elif Devoir.objects.filter(utilisateur=user, consigne=dev.description).exists():
-                Devoir.objects.filter(utilisateur=user, consigne=dev.description).update(
-                    utilisateur=user,
-                    titre=dev.subject.name,
-                    date_limite=dev.date,
-                    est_termine=False
-                )
-                
-        return render(request, 'dashboard.html')
-
-    except ConnexionPronote.DoesNotExist:
-        return render(request, 'dashboard.html')
 
 
 @login_required
@@ -137,7 +117,7 @@ def check_pronote_lie(request):
 
     except ConnexionPronote.DoesNotExist:
         return JsonResponse({"message": "non"})
-
+    
 @login_required
 @csrf_exempt
 def url_liee_pronote(request):
