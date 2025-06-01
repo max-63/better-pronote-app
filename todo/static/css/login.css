@@ -1,0 +1,46 @@
+/* Couleurs principales */
+:root {
+    --green: #2ecc71;
+    --dark-green: #145a32;
+    --light-green: #e9f7ef;
+    --white: #ffffff;
+}
+
+/* Corps de la page */
+body.bg-light-green {
+    background-color: var(--light-green);
+    color: var(--dark-green);
+    font-family: 'Segoe UI', sans-serif;
+}
+
+/* Cartes */
+.box {
+    background-color: var(--white);
+    border: 1px solid var(--green);
+}
+
+/* Boutons */
+.btn-green {
+    background-color: var(--green);
+    color: var(--white);
+    border: none;
+}
+
+.btn-green:hover {
+    background-color: var(--dark-green);
+    color: var(--white);
+}
+
+/* Donne la même hauteur à tous les éléments .equal-height dans une rangée Bootstrap */
+@media (min-width: 768px) {
+    .row {
+        display: flex;
+        align-items: stretch;
+    }
+
+    .equal-height {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+}

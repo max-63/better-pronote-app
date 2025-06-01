@@ -1,0 +1,46 @@
+:root {
+    --green: #2ecc71;
+    --dark-green: #145a32;
+    --light-green: #e9f7ef;
+    --white: #ffffff;
+}
+
+/* Conteneur du bouton, en dark green, avec padding + centrage */
+#btn_pronote {
+    background-color: var(--dark-green);
+    padding: 20px;
+    display: flex;
+    justify-content: center; /* centre horizontalement */
+    align-items: center;     /* centre verticalement */
+    
+}
+
+#lie_pronote {
+    background-color: var(--green);
+    color: var(--white);
+    border: none;
+    border-radius: 20px;
+    padding: 10px 20px;
+    font-size: 1.4em;
+    cursor: pointer;
+    display: flex;
+    align-items: center; /* centre verticalement */
+    gap: 10px; /* espace entre texte et image */
+    
+    /* largeur adaptée au contenu, mais max 100% de son parent */
+    width: auto;      
+    max-width: 100%;
+    white-space: nowrap; /* interdit le retour à la ligne */
+    
+    transition: background-color 0.3s ease;
+}
+
+
+#lie_pronote img {
+    width: auto;    /* taille de l'image */
+    height: 30px;
+    object-fit: contain;
+}
+#lie_pronote:hover {
+    background-color: #27ae60;
+}

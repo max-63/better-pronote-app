@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% load static %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="{% static 'css/dash.css' %}">
+</head>
+<body>
+    <div id="url_fetch_pronote_lie" data="{% url "check_pronote_lie" %}"></div>
+    <div id="url_liee_pronote" data="{% url "url_liee_pronote" %}"></div>
+    <div id="url_fetch_devoirs" data="{% url "get_devoirs_database" %}"></div>
+    <div id="pronote" data="{% static 'images/pronote.png' %}" style="display: none;"></div>
+    <div id="pronote_logo" data="{% static 'images/pronote_logo.png' %}"></div>
+
+    <div id="btn_pronote"></div>
+
+    
+
+
+    <div id="devoirs-list"></div>
+    {% load static %}
+    <script src="{% static 'js/connexion_pronote.js' %}"></script>
+    <script src="{% static "js/get_devoirs.js" %}"></script>
+</body>
+</html>
