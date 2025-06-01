@@ -1,6 +1,7 @@
 import datetime
 from io import BytesIO
 import json
+from zoneinfo import ZoneInfo
 from django.http import JsonResponse
 import pronotepy
 from .models import *
@@ -15,6 +16,7 @@ from pyzbar.pyzbar import decode
 from PIL import Image
 import icalendar
 import requests
+from django.utils import timezone
 
 
 
@@ -53,53 +55,70 @@ def dashboard(request):
     custom_user = CustomUser.objects.get(user=request.user)
     connexion = ConnexionPronote.objects.get(utilisateur=user)
     now = timezone.now()
+    print(connexion.date_connexion , now)
     temps_ecoule = now - connexion.date_connexion
     # Si le temps écoulé est strictement entre 5 et 10 minutes
-    if datetime.timedelta(minutes=5) < temps_ecoule < datetime.timedelta(minutes=10):
-        if connexion.date_connexion + datetime.timedelta(minutes=5) <= timezone.now() and connexion.date_connexion < timezone.now() - datetime.timedelta(minutes=10):
-            client = pronotepy.Client.qrcode_login(
-                qr_code={
-                    "login": connexion.login,
-                    "jeton": connexion.jeton,
-                    "url": connexion.url,
-                    "uuid": custom_user.uuid,
-                    "pin": connexion.pin,
-                },
-                pin=connexion.pin,
-                uuid=connexion.uuid
-            )
-            
-            new_qr = client.request_qr_code_data(pin=str(connexion.pin))
-            # enregistrer les nouveaux truc dans la db
-            ConnexionPronote.objects.filter(utilisateur=request.user).update(
-                login=new_qr["login"],
-                jeton=new_qr["jeton"],
-                url=new_qr["url"],
-                date_connexion=timezone.now(),
-            )
-            devoirs = client.homework(datetime.date.today(), datetime.date.today() + datetime.timedelta(days=21))
-            print(f"{len(devoirs)} devoirs récupérés depuis Pronote")
-            for dev in devoirs:
-                #si dev.description n'existe pas dans la db + dev.date n'existe pas dans la db
-                if not Devoir.objects.filter(utilisateur=user, consigne=dev.description).exists() and not Devoir.objects.filter(utilisateur=user, date_limite=dev.date).exists():
-                    Devoir.objects.create(
-                        utilisateur=user,
-                        titre=dev.subject.name, 
-                        consigne=dev.description,
-                        date_limite=dev.date,
-                        est_termine=False
-                    )
-                elif Devoir.objects.filter(utilisateur=user, consigne=dev.description).exists():
-                    Devoir.objects.filter(utilisateur=user, consigne=dev.description).update(
-                        utilisateur=user,
-                        titre=dev.subject.name,
-                        consigne=dev.description,
-                        date_limite=dev.date,
-                        est_termine=False
-                    )
-    
+    if temps_ecoule < timedelta(minutes=10):
+        print('cool')
+        client = pronotepy.Client.qrcode_login(
+            qr_code={
+                "login": connexion.login,
+                "jeton": connexion.jeton,
+                "url": connexion.url,
+                "uuid": custom_user.uuid,
+                "pin": connexion.pin,
+            },
+            pin=connexion.pin,
+            uuid=connexion.uuid
+        )
         
-            return render(request, 'dashboard.html')
+        new_qr = client.request_qr_code_data(pin=str(connexion.pin))
+        print("new_qr =", new_qr)
+
+        # enregistrer les nouveaux truc dans la db        
+        # connexion.login = new_qr["login"]
+        # connexion.jeton = new_qr["jeton"]
+        connexion.url = new_qr["url"]
+        # connexion.date_connexion = timezone.now()
+        connexion.save()
+        
+        client = pronotepy.Client.qrcode_login(
+            qr_code={
+                "login": connexion.login,
+                "jeton": connexion.jeton,
+                "url": connexion.url,
+                "uuid": custom_user.uuid,
+                "pin": connexion.pin,
+            },
+            pin=connexion.pin,
+            uuid=connexion.uuid
+        )
+        
+        devoirs = client.homework(datetime.date.today(), datetime.date.today() + timedelta(days=21))
+        print(f"{len(devoirs)} devoirs récupérés depuis Pronote")
+        for dev in devoirs:
+            #si dev.description n'existe pas dans la db + dev.date n'existe pas dans la db
+            if not Devoir.objects.filter(utilisateur=user, consigne=dev.description, date_limite=dev.date).exists():
+
+                Devoir.objects.create(
+                    utilisateur=user,
+                    titre=dev.subject.name, 
+                    consigne=dev.description,
+                    date_limite=dev.date,
+                    est_termine=False
+                )
+
+        notes = client.current_period.grades
+        for grade in notes:
+            print(f"Matière : {grade.subject.name}")
+            print(f"Note     : {grade.grade}")
+            print(f"Sur      : {grade.out_of}")
+            print(f"Coef     : {grade.coefficient}")
+            print(f"Date     : {grade.date}")
+            print(f"Prof     : {grade}")
+            print("-" * 30)        
+    
+        return render(request, 'dashboard.html')
     
     return render(request, 'dashboard.html')    
 
@@ -109,13 +128,17 @@ def dashboard(request):
 def check_pronote_lie(request):
     user = request.user
     try:
-        # Vérifie si la connexion Pronote existe et est encore fraîche
-        connection = user.connexionpronote
-        now = timezone.now()
-        is_valid = connection.date_connexion > now - datetime.timedelta(minutes=10)
-        return JsonResponse({"message": "oui" if is_valid else "non"})
-
+        connexion = ConnexionPronote.objects.get(utilisateur=user)
     except ConnexionPronote.DoesNotExist:
+        return JsonResponse({"message": "non lie"})
+
+    now = timezone.now()
+    temps_ecoule = now - connexion.date_connexion
+
+    # Si la connexion date de moins de 10 minutes
+    if temps_ecoule < timedelta(minutes=10):
+        return JsonResponse({"message": "lie"})
+    else:
         return JsonResponse({"message": "non"})
     
 @login_required
@@ -153,19 +176,28 @@ def url_liee_pronote(request):
 
             client = pronotepy.Client.qrcode_login(qr_code=qr_code_dict, pin=code_pin, uuid=mon_uuid)
             
+            if not ConnexionPronote.objects.filter(utilisateur=request.user).exists():
+                ConnexionPronote.objects.create(
+                    utilisateur=request.user,
+                    jeton=qr_code_dict.get("jeton"),
+                    login=qr_code_dict.get("login"),
+                    url=qr_code_dict.get("url"),
+                    uuid=mon_uuid,
+                    pin=code_pin,
+                    date_connexion=timezone.now()
+                )
+            else:
+                connexion = ConnexionPronote.objects.get(utilisateur=request.user)
+                connexion.jeton = qr_code_dict.get("jeton")
+                connexion.login = qr_code_dict.get("login")
+                connexion.url = qr_code_dict.get("url")
+                connexion.uuid = mon_uuid
+                connexion.pin = code_pin
+                connexion.date_connexion = timezone.now()
+                connexion.save()
             
-            ConnexionPronote.objects.update_or_create(
-                utilisateur=request.user,
-                defaults={
-                    "jeton": qr_code_dict.get("jeton"),
-                    "login": qr_code_dict.get("login"),
-                    "url": qr_code_dict.get("url"),
-                    "uuid": mon_uuid,
-                    "pin": code_pin,
-                }
-            )
             
-            devoirs = client.homework(datetime.date.today(), datetime.date.today() + datetime.timedelta(days=365))
+            devoirs = client.homework(datetime.date.today(), datetime.date.today() + timedelta(days=365))
             for devoir in devoirs:
                 if not Devoir.objects.filter(utilisateur=request.user, consigne=devoir.description).exists():
                     Devoir.objects.create(

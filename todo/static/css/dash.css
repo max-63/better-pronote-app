@@ -12,7 +12,7 @@
     display: flex;
     justify-content: center; /* centre horizontalement */
     align-items: center;     /* centre verticalement */
-    
+    display: block;
 }
 
 #lie_pronote {

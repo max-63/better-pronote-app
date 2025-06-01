@@ -84,4 +84,6 @@ class ConnexionPronote(models.Model):
     date_connexion = models.DateTimeField(auto_now_add=True)
     uuid = models.CharField(max_length=36) 
     pin = models.CharField(max_length=4)
+    username = models.TextField()
+    password = models.TextField()
 
