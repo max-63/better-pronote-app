@@ -10,11 +10,12 @@ class CustomUser(models.Model):
 
 class Notes(models.Model):
     utilisateur = models.ForeignKey(User, on_delete=models.CASCADE)
-    dividende  = models.TextField()
-    diviseur = models.TextField()
-    resultat = models.TextField()
-    def __str__(self):
-        return f"{self.dividende} / {self.diviseur} = {self.utilisateur.username}"
+    matiere  = models.TextField()
+    note = models.TextField()
+    sur = models.TextField()
+    coef = models.CharField(max_length=10)
+    date = models.DateField()
+
     
     
 class EmploiDuTemps(models.Model):

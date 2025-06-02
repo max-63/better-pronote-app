@@ -53,72 +53,91 @@ def login(request):
 def dashboard(request):
     user = request.user
     custom_user = CustomUser.objects.get(user=request.user)
-    connexion = ConnexionPronote.objects.get(utilisateur=user)
-    now = timezone.now()
-    print(connexion.date_connexion , now)
-    temps_ecoule = now - connexion.date_connexion
-    # Si le temps écoulé est strictement entre 5 et 10 minutes
-    if temps_ecoule < timedelta(minutes=10):
-        print('cool')
-        client = pronotepy.Client.qrcode_login(
-            qr_code={
-                "login": connexion.login,
-                "jeton": connexion.jeton,
-                "url": connexion.url,
-                "uuid": custom_user.uuid,
-                "pin": connexion.pin,
-            },
-            pin=connexion.pin,
-            uuid=connexion.uuid
-        )
-        
-        new_qr = client.request_qr_code_data(pin=str(connexion.pin))
-        print("new_qr =", new_qr)
+    if ConnexionPronote.objects.filter(utilisateur=user).exists():
+        connexion = ConnexionPronote.objects.get(utilisateur=user)
+        now = timezone.now()
+        print(connexion.date_connexion , now)
+        temps_ecoule = now - connexion.date_connexion
+        # Si le temps écoulé est strictement entre 5 et 10 minutes
+        if temps_ecoule < timedelta(minutes=10):
+            print('cool')
+            client = pronotepy.Client.qrcode_login(
+                qr_code={
+                    "login": connexion.login,
+                    "jeton": connexion.jeton,
+                    "url": connexion.url,
+                    "uuid": custom_user.uuid,
+                    "pin": connexion.pin,
+                },
+                pin=connexion.pin,
+                uuid=connexion.uuid
+            )
+            
+            new_qr = client.request_qr_code_data(pin=str(connexion.pin))
+            print("new_qr =", new_qr)
 
-        # enregistrer les nouveaux truc dans la db        
-        # connexion.login = new_qr["login"]
-        # connexion.jeton = new_qr["jeton"]
-        connexion.url = new_qr["url"]
-        # connexion.date_connexion = timezone.now()
-        connexion.save()
-        
-        client = pronotepy.Client.qrcode_login(
-            qr_code={
-                "login": connexion.login,
-                "jeton": connexion.jeton,
-                "url": connexion.url,
-                "uuid": custom_user.uuid,
-                "pin": connexion.pin,
-            },
-            pin=connexion.pin,
-            uuid=connexion.uuid
-        )
-        
-        devoirs = client.homework(datetime.date.today(), datetime.date.today() + timedelta(days=21))
-        print(f"{len(devoirs)} devoirs récupérés depuis Pronote")
-        for dev in devoirs:
-            #si dev.description n'existe pas dans la db + dev.date n'existe pas dans la db
-            if not Devoir.objects.filter(utilisateur=user, consigne=dev.description, date_limite=dev.date).exists():
+            # enregistrer les nouveaux truc dans la db        
+            # connexion.login = new_qr["login"]
+            # connexion.jeton = new_qr["jeton"]
+            connexion.url = new_qr["url"]
+            # connexion.date_connexion = timezone.now()
+            connexion.save()
+            
+            client = pronotepy.Client.qrcode_login(
+                qr_code={
+                    "login": connexion.login,
+                    "jeton": connexion.jeton,
+                    "url": connexion.url,
+                    "uuid": custom_user.uuid,
+                    "pin": connexion.pin,
+                },
+                pin=connexion.pin,
+                uuid=connexion.uuid
+            )
+            
+            devoirs = client.homework(datetime.date.today(), datetime.date.today() + timedelta(days=21))
+            print(f"{len(devoirs)} devoirs récupérés depuis Pronote")
+            for dev in devoirs:
+                #si dev.description n'existe pas dans la db + dev.date n'existe pas dans la db
+                if not Devoir.objects.filter(utilisateur=user, consigne=dev.description, date_limite=dev.date).exists():
 
-                Devoir.objects.create(
-                    utilisateur=user,
-                    titre=dev.subject.name, 
-                    consigne=dev.description,
-                    date_limite=dev.date,
-                    est_termine=False
-                )
+                    Devoir.objects.create(
+                        utilisateur=user,
+                        titre=dev.subject.name, 
+                        consigne=dev.description,
+                        date_limite=dev.date,
+                        est_termine=False
+                    ) 
+            notes = client.current_period.grades
+            for grade in notes:
+                print(f"Matière : {grade.subject.name}")
+                print(f"Note     : {grade.grade}")
+                print(f"Sur      : {grade.out_of}")
+                print(f"Coef     : {grade.coefficient}")
+                print(f"Date     : {grade.date}")
+                print("-" * 30)
 
-        notes = client.current_period.grades
-        for grade in notes:
-            print(f"Matière : {grade.subject.name}")
-            print(f"Note     : {grade.grade}")
-            print(f"Sur      : {grade.out_of}")
-            print(f"Coef     : {grade.coefficient}")
-            print(f"Date     : {grade.date}")
-            print(f"Prof     : {grade}")
-            print("-" * 30)        
-    
-        return render(request, 'dashboard.html')
+                if not Notes.objects.filter(utilisateur=request.user, matiere=grade.subject.name, date=grade.date).exists():
+                    Notes.objects.create(
+                        utilisateur=request.user,
+                        matiere=grade.subject.name,
+                        note=grade.grade,
+                        sur=grade.out_of,
+                        coef=grade.coefficient,
+                        date=grade.date
+                    )
+                elif Notes.objects.filter(utilisateur=request.user, matiere=grade.subject.name, date=grade.date).exists():
+                    Notes.objects.filter(utilisateur=request.user, matiere=grade.subject.name, date=grade.date).update(
+                        utilisateur=request.user,
+                        matiere=grade.subject.name,
+                        note=grade.grade,
+                        sur=grade.out_of,
+                        coef=grade.coefficient,
+                        date=grade.date
+                    )
+            
+        
+            return render(request, 'dashboard.html')
     
     return render(request, 'dashboard.html')    
 
@@ -130,7 +149,7 @@ def check_pronote_lie(request):
     try:
         connexion = ConnexionPronote.objects.get(utilisateur=user)
     except ConnexionPronote.DoesNotExist:
-        return JsonResponse({"message": "non lie"})
+        return JsonResponse({"message": "non"})
 
     now = timezone.now()
     temps_ecoule = now - connexion.date_connexion
@@ -214,6 +233,35 @@ def url_liee_pronote(request):
                         date_limite=devoir.date,
                         est_termine=False
                     )
+            notes = client.current_period.grades
+            for grade in notes:
+                print(f"Matière : {grade.subject.name}")
+                print(f"Note     : {grade.grade}")
+                print(f"Sur      : {grade.out_of}")
+                print(f"Coef     : {grade.coefficient}")
+                print(f"Date     : {grade.date}")
+                print("-" * 30)
+
+                if not Notes.objects.filter(username=request.user, matiere=grade.subject.name, date=grade.date).exists():
+                    Notes.objects.create(
+                        username=request.user,
+                        matiere=grade.subject.name,
+                        note=grade.grade,
+                        sur=grade.out_of,
+                        coefficient=grade.coefficient,
+                        date=grade.date
+                    )
+                elif Notes.objects.filter(username=request.user, matiere=grade.subject.name, date=grade.date).exists():
+                    Notes.objects.filter(username=request.user, matiere=grade.subject.name, date=grade.date).update(
+                        username=request.user,
+                        matiere=grade.subject.name,
+                        note=grade.grade,
+                        sur=grade.out_of,
+                        coefficient=grade.coefficient,
+                        date=grade.date
+                    )
+            
+            # Enregistrer les notes dans la base de données
             
             
             
@@ -235,3 +283,8 @@ def get_devoirs_database(request):
 @login_required
 def get_emploit_du_temps(request):
     pass
+
+@login_required
+def get_notes(request):
+    notes = Notes.objects.filter(utilisateur=request.user)
+    return JsonResponse({"status": "succes", "notes": list(notes.values())})
