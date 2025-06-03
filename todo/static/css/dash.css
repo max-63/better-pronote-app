@@ -44,3 +44,13 @@
 #lie_pronote:hover {
     background-color: #27ae60;
 }
+
+.barre_couleur_matiere {
+    display: inline-flex;
+    align-items: center;       /* centre verticalement */         /* grosse barre verticale */
+    padding-right: 10px;
+    color: var(--couleur);     /* couleur dynamique via CSS variable */
+    font-weight: 100000;      /* très gras */
+    font-size: 40px;       /* plus grand */
+
+}
