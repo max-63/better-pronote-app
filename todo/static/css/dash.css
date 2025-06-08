@@ -5,6 +5,12 @@
     --white: #ffffff;
 }
 
+body {
+    background-color: var(--light-green);
+    color: var(--dark-green);
+    font-family: 'Segoe UI', sans-serif;
+}
+
 /* Conteneur du bouton, en dark green, avec padding + centrage */
 #btn_pronote {
     background-color: var(--dark-green);
@@ -12,7 +18,7 @@
     display: flex;
     justify-content: center; /* centre horizontalement */
     align-items: center;     /* centre verticalement */
-    display: block;
+
 }
 
 #lie_pronote {
@@ -45,12 +51,90 @@
     background-color: #27ae60;
 }
 
-.barre_couleur_matiere {
-    display: inline-flex;
-    align-items: center;       /* centre verticalement */         /* grosse barre verticale */
-    padding-right: 10px;
-    color: var(--couleur);     /* couleur dynamique via CSS variable */
-    font-weight: 100000;      /* très gras */
-    font-size: 40px;       /* plus grand */
+.devoir-item {
+    display: flex;
+    align-items: stretch;
+    gap: 10px;
+    margin-bottom: 10px;
+    padding: 10px;
+    border-radius: 8px;
+}
 
+.barre_couleur_matiere {
+    background-color: var(--couleur);
+    width: 0.5rem;
+    border-radius: 5px;
+    height: auto; /* ← auto au lieu de 100% */
+}
+
+.texte_devoir {
+    display: flex;
+    flex-direction: column;
+}
+
+.date-bloc {
+    background-color: color(var(--light-green)) !important;
+}
+
+.date-titre {
+    background-color: #EBDBFF;
+    text-align: left;
+    border-top-right-radius: 8px;
+    border-bottom-right-radius: 8px;
+}
+
+.travail-a-faire {
+    font-size: 1.2em;
+    font-weight: bold;
+    margin-bottom: 10px;
+    color : #935EC7;
+    font-weight: 600;
+}
+
+.note {
+    background-color: #fffef3;       /* fond clair vert pâle */
+    padding: 15px 20px;
+    margin-bottom: 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    transition: background-color 0.3s ease;
+}
+
+.note:hover {
+    background-color: #FFD89C; /* fond légèrement plus foncé au hover */
+}
+
+.note_matiere {
+    color: #145a32;      /* vert foncé */
+    font-weight: 700;
+    font-size: 1.3rem;
+    margin-bottom: 8px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.note p {
+    margin: 4px 0;
+    font-size: 1rem;
+    color: #333333;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.note_encadree {
+    background-color: #FFD89C;
+    color: black;
+    width: 85px; /* largeur fixe */
+    height: 40px; /* hauteur fixe (ajustable selon besoin) */
+    display: flex;
+    justify-content: center; /* centre horizontalement */
+    align-items: center;     /* centre verticalement */
+    font-weight: bold;
+    font-size: 1.2rem;
+    border-radius: 8px;
+}
+
+
+.note_entete {
+    display: flex;
+    justify-content: space-between; /* matière à gauche, note à droite */
+    align-items: center;
 }

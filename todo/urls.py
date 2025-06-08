@@ -11,4 +11,5 @@ urlpatterns = [
     path('url_liee_pronote', url_liee_pronote, name='url_liee_pronote'),
     path('get_devoirs_database/', get_devoirs_database, name='get_devoirs_database'),
     path('get_notes', get_notes, name='get_notes'),
+    path('url_fetch_edt/', get_pdf, name='url_fetch_edt' )
 ]

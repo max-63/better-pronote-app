@@ -8,6 +8,11 @@
     <meta name="csrf-token" content="{{ csrf_token }}">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link rel="stylesheet" href="{% static 'css/dash.css' %}">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.6.347/pdf.min.js"></script>
+
+
 </head>
 <body>
     <div id="url_fetch_pronote_lie" data="{% url "check_pronote_lie" %}"></div>
@@ -16,12 +21,35 @@
     <div id="pronote" data="{% static 'images/pronote.png' %}" style="display: none;"></div>
     <div id="pronote_logo" data="{% static 'images/pronote_logo.png' %}"></div>
     <div id="get_notes_url" data="{% url "get_notes" %}"></div>
-    <div id="btn_pronote"></div>
+    <div id="url_fetch_edt" data="{% url "url_fetch_edt" %}"></div>
+
+    <div class="container-fluid mt-0">
+        <!-- Ligne pour le bouton Pronote -->
+        <div class="row align-items-center mb-4">
+            <div class="col text-center" id="btn_pronote"></div>
+        </div>
+        <div class="row align-items-center">
+            <a href="">Travail à faire</a>
+            <a href=""></a>
+            <a href=""></a>
+            <a href=""></a>
+        </div>
+
+        <!-- Ligne pour les 3 colonnes -->
+        <div class="row g-4">
+            <div class="col-12 col-sm-6 col-lg-4">
+                <div id="devoirs-list" class="p-3 border bg-light rounded shadow-sm"></div>
+            </div>
+            <div class="col-12 col-sm-4 col-lg-3">
+                <div id="note-list" class="p-3 border bg-light rounded shadow-sm"></div>
+            </div>
+            <div class="col-12 col-sm-12 col-lg-5">
+                <div id="edt" class="p-3 border bg-light rounded shadow-sm"></div>
+            </div>
+        </div>
+    </div>
 
     
-
-
-    <div id="devoirs-list"></div>
     {% load static %}
     <script src="{% static 'js/connexion_pronote.js' %}"></script>
     <script src="{% static "js/get_devoirs.js" %}"></script>

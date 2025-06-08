@@ -1,0 +1,226 @@
+[
+    {
+        "jour": "Vendredi",
+        "heure": "8h30",
+        "matiere": "PHYSIQUE-CHIMIE",
+        "prof": "DAJOUX N.",
+        "salle": "Salle 22-Physique Chimie"
+    },
+    {
+        "jour": "Vendredi",
+        "heure": "9h30",
+        "matiere": "FRANCAIS",
+        "prof": "FORCE A.",
+        "salle": "Salle 17"
+    },
+    {
+        "jour": "Vendredi",
+        "heure": "10h30",
+        "matiere": "MATHEMATIQUES",
+        "prof": "BOUE C.",
+        "salle": "Salle 01"
+    },
+    {
+        "jour": "Vendredi",
+        "heure": "11h30",
+        "matiere": "ACCOMP.CHOIX ORIENT.",
+        "prof": "BONHOMME J.",
+        "salle": "Techno 2"
+    },
+    {
+        "jour": "Vendredi",
+        "heure": "12h30",
+        "matiere": "ANGLAIS LV1",
+        "prof": "LABROSSE A.",
+        "salle": "Salle 18"
+    },
+    {
+        "jour": "Vendredi",
+        "heure": "13h30",
+        "matiere": "[MPERM4]",
+        "prof": "Salle de Permanence",
+        "salle": "ASSISTANT D'EDUCATION"
+    },
+    {
+        "jour": "Vendredi",
+        "heure": "14h00",
+        "matiere": "LCA LATIN",
+        "prof": "CHAMUSSY C.",
+        "salle": "[LATIN 3e]"
+    },
+    {
+        "jour": "Vendredi",
+        "heure": "15h00",
+        "matiere": "ANGLAIS LV1",
+        "prof": "LABROSSE A.",
+        "salle": "Salle 18"
+    },
+    {
+        "jour": "Vendredi",
+        "heure": "16h00",
+        "matiere": "Prof. absent",
+        "prof": "ALLEMAND LV2",
+        "salle": "MATICHARD P."
+    },
+    {
+        "jour": "Vendredi",
+        "heure": "17h00",
+        "matiere": "[ALLEMAND 3e A]",
+        "prof": "Salle 17",
+        "salle": "Changement de salle"
+    },
+    {
+        "jour": "Vendredi",
+        "heure": "17h30",
+        "matiere": "",
+        "prof": "METHODOLOGIE",
+        "salle": "CHARRIER W.,DUMESNIL I."
+    },
+    {
+        "jour": "Vendredi",
+        "heure": "Heure inconnue",
+        "matiere": "Techno 1-Salle Info",
+        "prof": "TECHNOLOGIE",
+        "salle": "BONHOMME J."
+    },
+    {
+        "jour": "Vendredi",
+        "heure": "Heure inconnue",
+        "matiere": "Techno 2",
+        "prof": "EDUCATION MUSICALE",
+        "salle": "BRIVARY C."
+    },
+    {
+        "jour": "Vendredi",
+        "heure": "Heure inconnue",
+        "matiere": "SCIENCES VIE & TERRE",
+        "prof": "BACH V.",
+        "salle": "Salle 21-SVT"
+    },
+    {
+        "jour": "Vendredi",
+        "heure": "Heure inconnue",
+        "matiere": "Prof. absent",
+        "prof": "ARTS PLASTIQUES",
+        "salle": "RAPIN C."
+    },
+    {
+        "jour": "Vendredi",
+        "heure": "Heure inconnue",
+        "matiere": "ED.PHYSIQUE & SPORT.",
+        "prof": "BLAQUE A.",
+        "salle": "FRANCAIS"
+    },
+    {
+        "jour": "Vendredi",
+        "heure": "Heure inconnue",
+        "matiere": "FORCE A.",
+        "prof": "Salle 17",
+        "salle": "HISTOIRE-GEOGRAPHIE"
+    },
+    {
+        "jour": "Vendredi",
+        "heure": "Heure inconnue",
+        "matiere": "CHARRIER W.",
+        "prof": "Salle 26",
+        "salle": "FRANCAIS"
+    },
+    {
+        "jour": "Vendredi",
+        "heure": "Heure inconnue",
+        "matiere": "FORCE A.",
+        "prof": "Salle 17",
+        "salle": "MATHEMATIQUES"
+    },
+    {
+        "jour": "Vendredi",
+        "heure": "Heure inconnue",
+        "matiere": "BOUE C.",
+        "prof": "Salle 01",
+        "salle": "Permanence"
+    },
+    {
+        "jour": "Vendredi",
+        "heure": "Heure inconnue",
+        "matiere": "[MPERM3]",
+        "prof": "Salle de Permanence",
+        "salle": "ASSISTANT D'EDUCATION"
+    },
+    {
+        "jour": "Vendredi",
+        "heure": "Heure inconnue",
+        "matiere": "HISTOIRE-GEOGRAPHIE",
+        "prof": "CHARRIER W.",
+        "salle": "Salle 26"
+    },
+    {
+        "jour": "Vendredi",
+        "heure": "Heure inconnue",
+        "matiere": "FRANCAIS",
+        "prof": "FORCE A.",
+        "salle": "Salle 17"
+    },
+    {
+        "jour": "Vendredi",
+        "heure": "Heure inconnue",
+        "matiere": "Changement de salle",
+        "prof": "LCA LATIN",
+        "salle": "CHAMUSSY C."
+    },
+    {
+        "jour": "Vendredi",
+        "heure": "Heure inconnue",
+        "matiere": "[LATIN 3e]",
+        "prof": "Salle Audiovisuelle",
+        "salle": "PHYSIQUE-CHIMIE"
+    },
+    {
+        "jour": "Vendredi",
+        "heure": "Heure inconnue",
+        "matiere": "DAJOUX N.",
+        "prof": "Salle 22-Physique Chimie",
+        "salle": "HISTOIRE-GEOGRAPHIE"
+    },
+    {
+        "jour": "Vendredi",
+        "heure": "Heure inconnue",
+        "matiere": "CHARRIER W.",
+        "prof": "Salle 26",
+        "salle": "MATHEMATIQUES"
+    },
+    {
+        "jour": "Vendredi",
+        "heure": "Heure inconnue",
+        "matiere": "BOUE C.",
+        "prof": "Salle 01",
+        "salle": "Prof. absent"
+    },
+    {
+        "jour": "Vendredi",
+        "heure": "Heure inconnue",
+        "matiere": "ALLEMAND LV2",
+        "prof": "MATICHARD P.",
+        "salle": "[ALLEMAND 3e A]"
+    },
+    {
+        "jour": "Vendredi",
+        "heure": "Heure inconnue",
+        "matiere": "Changement de salle",
+        "prof": "ANGLAIS LV1",
+        "salle": "LABROSSE A."
+    },
+    {
+        "jour": "Vendredi",
+        "heure": "Heure inconnue",
+        "matiere": "[3eA GR.1]",
+        "prof": "Techno 1-Salle Info",
+        "salle": "TECHNOLOGIE"
+    },
+    {
+        "jour": "Vendredi",
+        "heure": "Heure inconnue",
+        "matiere": "BONHOMME J.",
+        "prof": "Techno 2",
+        "salle": "COLLEGE CONDORCET"
+    }
+]

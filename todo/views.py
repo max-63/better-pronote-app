@@ -2,7 +2,7 @@ import datetime
 from io import BytesIO
 import json
 from zoneinfo import ZoneInfo
-from django.http import JsonResponse
+from django.http import FileResponse, JsonResponse
 import pronotepy
 from .models import *
 from django.shortcuts import redirect, render
@@ -17,6 +17,12 @@ from PIL import Image
 import icalendar
 import requests
 from django.utils import timezone
+import fitz
+import json
+import re
+import os
+from pathlib import Path
+from django.conf import settings  # pour récupérer le chemin MEDIA_ROOT
 
 
 
@@ -56,11 +62,10 @@ def dashboard(request):
     if ConnexionPronote.objects.filter(utilisateur=user).exists():
         connexion = ConnexionPronote.objects.get(utilisateur=user)
         now = timezone.now()
-        print(connexion.date_connexion , now)
         temps_ecoule = now - connexion.date_connexion
+        print("temps ecoule = ", temps_ecoule)
         # Si le temps écoulé est strictement entre 5 et 10 minutes
         if temps_ecoule < timedelta(minutes=10):
-            print('cool')
             client = pronotepy.Client.qrcode_login(
                 qr_code={
                     "login": connexion.login,
@@ -74,7 +79,7 @@ def dashboard(request):
             )
             
             new_qr = client.request_qr_code_data(pin=str(connexion.pin))
-            print("new_qr =", new_qr)
+            # print("new_qr =", new_qr)
 
             # enregistrer les nouveaux truc dans la db        
             # connexion.login = new_qr["login"]
@@ -96,7 +101,26 @@ def dashboard(request):
             )
             
             devoirs = client.homework(datetime.date.today(), datetime.date.today() + timedelta(days=21))
-            print(f"{len(devoirs)} devoirs récupérés depuis Pronote")
+            
+            
+            edt_du_jour = client.generate_timetable_pdf(datetime.date.today(), portrait=False)
+            response = requests.get(edt_du_jour)
+            date_str = datetime.date.today().strftime('%Y-%m-%d')
+            filename = f"edt_jour-{date_str}-{request.user}.pdf"
+            media_dir_ent_pdf = os.path.join(settings.MEDIA_ROOT, 'pdf_edt')
+            # S'assurer que le dossier existe (sinon on le crée)
+            os.makedirs(media_dir_ent_pdf, exist_ok=True)
+
+            # Chemin complet du fichier
+            file_path = os.path.join(media_dir_ent_pdf, filename)
+
+            # Écrire le contenu téléchargé dans le fichier
+            with open(file_path, 'wb') as f:
+                f.write(response.content)
+
+            print(f"Fichier enregistré dans : {file_path}")
+            
+            # # print(f"{len(devoirs)} devoirs récupérés depuis Pronote")
             for dev in devoirs:
                 #si dev.description n'existe pas dans la db + dev.date n'existe pas dans la db
                 if not Devoir.objects.filter(utilisateur=user, consigne=dev.description, date_limite=dev.date).exists():
@@ -110,12 +134,12 @@ def dashboard(request):
                     ) 
             notes = client.current_period.grades
             for grade in notes:
-                print(f"Matière : {grade.subject.name}")
-                print(f"Note     : {grade.grade}")
-                print(f"Sur      : {grade.out_of}")
-                print(f"Coef     : {grade.coefficient}")
-                print(f"Date     : {grade.date}")
-                print("-" * 30)
+                # # print(f"Matière : {grade.subject.name}")
+                # # print(f"Note     : {grade.grade}")
+                # # print(f"Sur      : {grade.out_of}")
+                # print(f"Coef     : {grade.coefficient}")
+                # print(f"Date     : {grade.date}")
+                # print("-" * 30)
 
                 if not Notes.objects.filter(utilisateur=request.user, matiere=grade.subject.name, date=grade.date).exists():
                     Notes.objects.create(
@@ -137,6 +161,9 @@ def dashboard(request):
                     )
             
         
+            return render(request, 'dashboard.html')
+        else:
+            #retourner une requet qui va fetch 
             return render(request, 'dashboard.html')
     
     return render(request, 'dashboard.html')    
@@ -216,7 +243,7 @@ def url_liee_pronote(request):
                 connexion.save()
             
             
-            devoirs = client.homework(datetime.date.today(), datetime.date.today() + timedelta(days=365))
+            devoirs = client.homework(datetime.date.today(), datetime.date.today() + timedelta(days=7))
             for devoir in devoirs:
                 if not Devoir.objects.filter(utilisateur=request.user, consigne=devoir.description).exists():
                     Devoir.objects.create(
@@ -235,31 +262,27 @@ def url_liee_pronote(request):
                     )
             notes = client.current_period.grades
             for grade in notes:
-                print(f"Matière : {grade.subject.name}")
-                print(f"Note     : {grade.grade}")
-                print(f"Sur      : {grade.out_of}")
-                print(f"Coef     : {grade.coefficient}")
-                print(f"Date     : {grade.date}")
-                print("-" * 30)
 
-                if not Notes.objects.filter(username=request.user, matiere=grade.subject.name, date=grade.date).exists():
+
+                if not Notes.objects.filter(utilisateur=request.user, matiere=grade.subject.name, date=grade.date).exists():
                     Notes.objects.create(
-                        username=request.user,
+                        utilisateur=request.user,
                         matiere=grade.subject.name,
                         note=grade.grade,
                         sur=grade.out_of,
-                        coefficient=grade.coefficient,
+                        coef=grade.coefficient,
                         date=grade.date
                     )
-                elif Notes.objects.filter(username=request.user, matiere=grade.subject.name, date=grade.date).exists():
-                    Notes.objects.filter(username=request.user, matiere=grade.subject.name, date=grade.date).update(
-                        username=request.user,
+                elif Notes.objects.filter(utilisateur=request.user, matiere=grade.subject.name, date=grade.date).exists():
+                    Notes.objects.filter(utilisateur=request.user, matiere=grade.subject.name, date=grade.date).update(
+                        utilisateur=request.user,
                         matiere=grade.subject.name,
                         note=grade.grade,
                         sur=grade.out_of,
-                        coefficient=grade.coefficient,
+                        coef=grade.coefficient,
                         date=grade.date
                     )
+
             
             # Enregistrer les notes dans la base de données
             
@@ -277,7 +300,7 @@ def url_liee_pronote(request):
 
 @login_required
 def get_devoirs_database(request):
-    devoirs = Devoir.objects.filter(utilisateur=request.user)
+    devoirs = Devoir.objects.filter(utilisateur=request.user, date_limite__gte=datetime.date.today())
     return JsonResponse({"status": "succes", "devoirs": list(devoirs.values())})
 
 @login_required
@@ -288,3 +311,30 @@ def get_emploit_du_temps(request):
 def get_notes(request):
     notes = Notes.objects.filter(utilisateur=request.user)
     return JsonResponse({"status": "succes", "notes": list(notes.values())})
+
+@login_required
+@csrf_exempt
+def get_pdf(request):
+    media_dir_ent_pdf = os.path.join(settings.MEDIA_ROOT, 'pdf_edt')
+    #format fichier = edt_jour-2025-06-07-adrien.pdf
+    fichiers_utilisateur = [
+        f for f in os.listdir(media_dir_ent_pdf)
+        if f.endswith('.pdf') and request.user.username in f
+    ]
+    
+    if not fichiers_utilisateur:
+        print('pas de edt poiur cet user')
+    
+    # On récupère le chemin complet des fichiers
+    chemins_fichiers = [os.path.join(media_dir_ent_pdf, f) for f in fichiers_utilisateur]
+    
+    # On prend le fichier le plus récent selon la date de modification
+    dernier_fichier = max(chemins_fichiers, key=os.path.getmtime)
+    
+    # On renvoie le fichier
+    return FileResponse(
+        open(dernier_fichier, 'rb'),
+        content_type='application/pdf',
+        as_attachment=True,
+        filename=os.path.basename(dernier_fichier)
+    )
